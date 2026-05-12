@@ -1,11 +1,11 @@
+from app.auth.router import router as auth_router
 from fastapi import FastAPI
-
 app = FastAPI(
     title="PVIP API",
     description="Client Retention OS for Wellness Brands",
     version="1.0.0"
 )
-
+app.include_router(auth_router)
 @app.get("/")
 def health_check():
     return {"message": "PVIP Backend is running"}
