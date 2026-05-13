@@ -7,6 +7,9 @@ from app.models.user import User
 from app.auth.schemas import RegisterRequest
 from app.core.security import hash_password
 
+from app.auth.schemas import LoginRequest
+from app.core.security import verify_password
+from app.core.jwt import create_access_token
 
 def register_user(data: RegisterRequest, db: Session):
 
@@ -53,3 +56,39 @@ def register_user(data: RegisterRequest, db: Session):
     db.refresh(user)
 
     return user
+
+def login_user(data: LoginRequest, db: Session):
+
+    user = db.query(User).filter(
+        User.email == data.email
+    ).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciales inválidas."
+        )
+
+    valid_password = verify_password(
+        data.password,
+        user.password_hash
+    )
+
+    if not valid_password:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciales inválidas."
+        )
+
+    access_token = create_access_token(
+        data={
+            "sub": str(user.id),
+            "email": user.email,
+            "role": user.role
+        }
+    )
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
