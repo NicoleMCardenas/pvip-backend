@@ -19,10 +19,27 @@ def create_client(data: ClientCreate, business_id: str, db: Session):
     return client
 
 
-def get_clients(business_id: str, db: Session):
-    return db.query(Client).filter(
+def get_clients(
+    business_id: str,
+    db: Session,
+    search: str = None,
+    status: str = None
+):
+    query = db.query(Client).filter(
         Client.business_id == business_id
-    ).all()
+    )
+
+    if search:
+        query = query.filter(
+            Client.name.ilike(f"%{search}%")
+        )
+
+    if status:
+        query = query.filter(
+            Client.status == status
+        )
+
+    return query.all()
 
 
 def get_client_by_id(client_id: str, business_id: str, db: Session):

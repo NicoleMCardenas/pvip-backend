@@ -44,12 +44,16 @@ def create_my_client(
 
 @router.get("/", response_model=List[ClientResponse])
 def list_my_clients(
+    search: str = None,
+    status: str = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     return get_clients(
         current_user.business_id,
-        db
+        db,
+        search,
+        status
     )
 
 
