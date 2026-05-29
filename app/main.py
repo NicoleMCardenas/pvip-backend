@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from app.businesses.router import router as business_router
 from app.auth.router import router as auth_router
+from app.clients.router import router as clients_router
+
 app = FastAPI(
     title="PVIP API",
     description="Client Retention OS for Wellness Brands",
@@ -8,6 +10,7 @@ app = FastAPI(
 )
 app.include_router(auth_router)
 app.include_router(business_router)
+app.include_router(clients_router)
 
 @app.get("/")
 def health_check():
