@@ -5,6 +5,7 @@ from app.clients.router import router as clients_router
 from app.services.router import router as services_router
 from app.staff.router import router as staff_router
 from app.visits.router import router as visits_router
+from app.surveys.router import router as surveys_router
 
 app = FastAPI(
     title="PVIP API",
@@ -17,6 +18,8 @@ app.include_router(clients_router)
 app.include_router(services_router)
 app.include_router(staff_router)
 app.include_router(visits_router)
+app.include_router(surveys_router)
+
 @app.get("/")
 def health_check():
     return {"message": "PVIP Backend is running"}
