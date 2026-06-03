@@ -2,9 +2,11 @@ from sqlalchemy.orm import Session
 
 from app.models.visit import Visit
 from app.schemas.visit import VisitCreate, VisitUpdate
+from app.models.client import Client
 
 
 def create_visit(data: VisitCreate, business_id: str, db: Session):
+
     visit = Visit(
         business_id=business_id,
         client_id=data.client_id,
@@ -16,6 +18,18 @@ def create_visit(data: VisitCreate, business_id: str, db: Session):
     )
 
     db.add(visit)
+
+    client = db.query(Client).filter(
+        Client.id == data.client_id
+    ).first()
+
+    if client:
+        client.total_visits += 1
+
+        client.last_visit = data.visit_date
+
+        client.lifetime_value += data.amount
+
     db.commit()
     db.refresh(visit)
 

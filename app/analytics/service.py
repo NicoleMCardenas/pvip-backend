@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 from sqlalchemy import func, or_
 
 from app.models.survey import Survey
@@ -50,17 +49,17 @@ def get_dashboard_metrics(business_id: str, db: Session):
     ).count()
 
     at_risk_clients = db.query(Client).join(
-    Survey,
-    Survey.client_id == Client.id
+        Survey,
+        Survey.client_id == Client.id
     ).filter(
-    Client.business_id == business_id
+        Client.business_id == business_id
     ).filter(
-    or_(
-        Client.status == "at_risk",
-        Survey.satisfaction_score <= 2,
-        Survey.nps_score <= 6
-    )
-).distinct().count()
+        or_(
+            Client.status == "at_risk",
+            Survey.satisfaction_score <= 2,
+            Survey.nps_score <= 6
+        )
+    ).distinct().count()
 
     return {
         "total_surveys": total_surveys,
@@ -71,3 +70,21 @@ def get_dashboard_metrics(business_id: str, db: Session):
         "total_clients": total_clients,
         "at_risk_clients": at_risk_clients
     }
+
+
+def get_risk_clients(business_id: str, db: Session):
+
+    risk_clients = db.query(Client).join(
+        Survey,
+        Survey.client_id == Client.id
+    ).filter(
+        Client.business_id == business_id
+    ).filter(
+        or_(
+            Client.status == "at_risk",
+            Survey.satisfaction_score <= 2,
+            Survey.nps_score <= 6
+        )
+    ).distinct().all()
+
+    return risk_clients

@@ -1,10 +1,8 @@
 from datetime import datetime
-
 from sqlalchemy.orm import Session
-
 from app.models.survey import Survey
 from app.schemas.survey import SurveyCreate, SurveyResponseUpdate
-
+from app.models.client import Client
 
 def create_survey(data: SurveyCreate, business_id: str, db: Session):
     survey = Survey(
@@ -45,7 +43,18 @@ def update_survey_response(
 
     survey.status = "completed"
     survey.completed_at = datetime.utcnow()
+    
+    if (
+        survey.satisfaction_score is not None and survey.satisfaction_score <= 2
+    ) or (
+        survey.nps_score is not None and survey.nps_score <= 6
+    ):
+        client = db.query(Client).filter(
+            Client.id == survey.client_id
+        ).first()
 
+        if client:
+            client.status = "at_risk"
     db.commit()
     db.refresh(survey)
 
