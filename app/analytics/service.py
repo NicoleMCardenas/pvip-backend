@@ -88,3 +88,41 @@ def get_risk_clients(business_id: str, db: Session):
     ).distinct().all()
 
     return risk_clients
+
+
+def get_recovery_queue(business_id: str, db: Session):
+
+    recovery_clients = db.query(Client).join(
+        Survey,
+        Survey.client_id == Client.id
+    ).filter(
+        Client.business_id == business_id
+    ).filter(
+        or_(
+            Client.status == "at_risk",
+            Survey.satisfaction_score <= 2,
+            Survey.nps_score <= 6
+        )
+    ).distinct().all()
+
+    recovery_queue = []
+
+    for client in recovery_clients:
+
+        latest_survey = db.query(Survey).filter(
+            Survey.client_id == client.id
+        ).order_by(
+            Survey.created_at.desc()
+        ).first()
+
+        recovery_queue.append({
+            "client_id": client.id,
+            "client_name": client.name,
+            "client_email": client.email,
+            "risk_status": client.status,
+            "latest_nps": latest_survey.nps_score if latest_survey else None,
+            "latest_satisfaction": latest_survey.satisfaction_score if latest_survey else None,
+            "recommended_action": "Contact client and offer recovery follow-up"
+        })
+
+    return recovery_queue
