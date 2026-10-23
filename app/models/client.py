@@ -1,3 +1,4 @@
+
 import uuid
 
 from sqlalchemy import Column, String, DateTime, Integer, Numeric, ForeignKey
@@ -23,6 +24,9 @@ class Client(Base):
     phone = Column(String, nullable=True)
 
     status = Column(String, nullable=False, default="new")
+
+    # Stores the customer's status before being archived.
+    previous_status = Column(String, nullable=True)
 
     lifetime_value = Column(Numeric, nullable=False, default=0)
     total_visits = Column(Integer, nullable=False, default=0)

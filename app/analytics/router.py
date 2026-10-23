@@ -8,44 +8,68 @@ from app.models.user import User
 from app.analytics.service import (
     get_dashboard_metrics,
     get_risk_clients,
-    get_recovery_queue
+    get_recovery_queue,
 )
+from app.analytics.segmentation import get_customer_segments
+from app.analytics.trends import get_experience_trends
 
 
 router = APIRouter(
     prefix="/analytics",
-    tags=["Analytics"]
+    tags=["Analytics"],
 )
 
 
 @router.get("/dashboard")
 def dashboard_metrics(
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     return get_dashboard_metrics(
         current_user.business_id,
-        db
+        db,
     )
 
 
 @router.get("/risk-clients")
 def risk_clients(
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     return get_risk_clients(
         current_user.business_id,
-        db
+        db,
     )
 
 
 @router.get("/recovery-queue")
 def recovery_queue(
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     return get_recovery_queue(
         current_user.business_id,
-        db
+        db,
+    )
+
+
+@router.get("/customer-segments")
+def customer_segments(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return get_customer_segments(
+        current_user.business_id,
+        db,
+    )
+
+
+@router.get("/experience-trends")
+def experience_trends(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return get_experience_trends(
+        current_user.business_id,
+        db,
     )

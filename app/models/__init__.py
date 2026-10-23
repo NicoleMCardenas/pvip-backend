@@ -5,3 +5,6 @@ from app.models.service import Service
 from app.models.staff import Staff
 from app.models.visit import Visit
 from app.models.survey import Survey
+from app.models.retention_case import RetentionCase
+from app.models.retention_activity import RetentionActivity
+from app.models.revenue_recovery import RevenueRecovery

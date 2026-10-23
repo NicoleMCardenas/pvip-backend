@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class SurveyBase(BaseModel):
@@ -15,12 +15,26 @@ class SurveyCreate(SurveyBase):
 
 
 class SurveyResponseUpdate(BaseModel):
-    satisfaction_score: Optional[int] = None
-    nps_score: Optional[int] = None
+    satisfaction_score: Optional[int] = Field(
+        default=None,
+        ge=1,
+        le=5
+    )
 
-    rebook_intent: Optional[str] = None
+    nps_score: Optional[int] = Field(
+        default=None,
+        ge=0,
+        le=10
+    )
 
-    comment: Optional[str] = None
+    rebook_intent: Optional[
+        Literal["yes", "no", "unsure"]
+    ] = None
+
+    comment: Optional[str] = Field(
+        default=None,
+        max_length=2000
+    )
 
     status: Optional[str] = "completed"
 
@@ -38,13 +52,10 @@ class SurveyResponse(BaseModel):
     nps_score: Optional[int] = None
 
     rebook_intent: Optional[str] = None
-
     comment: Optional[str] = None
 
     completed_at: Optional[datetime] = None
-
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}

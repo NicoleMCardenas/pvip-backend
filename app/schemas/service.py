@@ -1,18 +1,32 @@
+
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import Literal, Optional
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict, field_validator
+
+
+ServiceStatus = Literal["active", "inactive"]
 
 
 class ServiceBase(BaseModel):
-    name: str
-    description: Optional[str] = None
-    category: Optional[str] = None
+    name: str = Field(min_length=1, max_length=150)
+    description: Optional[str] = Field(default=None, max_length=1000)
+    category: Optional[str] = Field(default=None, max_length=100)
 
-    duration_minutes: int
-    price: Decimal
+    duration_minutes: int = Field(gt=0)
+    price: Decimal = Field(ge=0, max_digits=12, decimal_places=2)
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        value = value.strip()
+
+        if not value:
+            raise ValueError("Service name cannot be empty.")
+
+        return value
 
 
 class ServiceCreate(ServiceBase):
@@ -20,24 +34,54 @@ class ServiceCreate(ServiceBase):
 
 
 class ServiceUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    category: Optional[str] = None
+    name: Optional[str] = Field(
+        default=None,
+        min_length=1,
+        max_length=150,
+    )
+    description: Optional[str] = Field(
+        default=None,
+        max_length=1000,
+    )
+    category: Optional[str] = Field(
+        default=None,
+        max_length=100,
+    )
 
-    duration_minutes: Optional[int] = None
-    price: Optional[Decimal] = None
+    duration_minutes: Optional[int] = Field(
+        default=None,
+        gt=0,
+    )
+    price: Optional[Decimal] = Field(
+        default=None,
+        ge=0,
+        max_digits=12,
+        decimal_places=2,
+    )
 
-    status: Optional[str] = None
+    status: Optional[ServiceStatus] = None
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return value
+
+        value = value.strip()
+
+        if not value:
+            raise ValueError("Service name cannot be empty.")
+
+        return value
 
 
 class ServiceResponse(ServiceBase):
     id: UUID
     business_id: UUID
 
-    status: str
+    status: ServiceStatus
 
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

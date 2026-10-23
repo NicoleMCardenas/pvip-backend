@@ -1,6 +1,7 @@
+
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
@@ -20,7 +21,9 @@ class ClientUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
-    status: Optional[str] = None
+    status: Optional[
+        Literal["new", "active", "at_risk"]
+    ] = None
 
 
 class ClientResponse(ClientBase):
@@ -28,6 +31,7 @@ class ClientResponse(ClientBase):
     business_id: UUID
 
     status: str
+    previous_status: Optional[str] = None
 
     lifetime_value: Decimal
     total_visits: int
