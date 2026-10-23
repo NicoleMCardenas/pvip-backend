@@ -137,3 +137,7 @@ def run_tests():
 
 if __name__ == "__main__":
     run_tests()
+
+
+def check_staff_sprint2():
+    run_tests()
