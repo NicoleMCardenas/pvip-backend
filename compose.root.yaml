@@ -1,0 +1,66 @@
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: kairo
+      POSTGRES_USER: kairo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kairo -d kairo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./pvip-backend
+    restart: unless-stopped
+    env_file:
+      - ./pvip-backend/.env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://kairo:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/kairo
+    ports:
+      - "127.0.0.1:8001:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+
+  notification-worker:
+    build:
+      context: ./pvip-backend
+    restart: unless-stopped
+    env_file:
+      - ./pvip-backend/.env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://kairo:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/kairo
+    command:
+      - sh
+      - -c
+      - |
+        while true; do
+          python -m app.surveys.run_notification_worker
+          sleep 60
+        done
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./pvip-frontend
+    restart: unless-stopped
+    environment:
+      API_URL: http://backend:8000
+      COOKIE_SECURE: "false"
+    ports:
+      - "127.0.0.1:3001:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
