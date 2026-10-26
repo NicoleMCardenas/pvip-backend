@@ -1,3 +1,4 @@
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,6 +10,12 @@ class Settings(BaseSettings):
     jwt_secret_key: str
     jwt_algorithm: str
     access_token_expire_minutes: int
+
+    # Email notifications
+    resend_api_key: str | None = None
+    email_from: str | None = None
+    survey_public_base_url: str | None = None
+    email_sending_enabled: bool = False
 
     model_config = SettingsConfigDict(
         env_file=".env",

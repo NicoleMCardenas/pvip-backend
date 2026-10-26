@@ -1,3 +1,4 @@
+
 from datetime import datetime
 from typing import Literal, Optional
 from uuid import UUID
@@ -18,13 +19,13 @@ class SurveyResponseUpdate(BaseModel):
     satisfaction_score: Optional[int] = Field(
         default=None,
         ge=1,
-        le=5
+        le=5,
     )
 
     nps_score: Optional[int] = Field(
         default=None,
         ge=0,
-        le=10
+        le=10,
     )
 
     rebook_intent: Optional[
@@ -33,7 +34,7 @@ class SurveyResponseUpdate(BaseModel):
 
     comment: Optional[str] = Field(
         default=None,
-        max_length=2000
+        max_length=2000,
     )
 
     status: Optional[str] = "completed"
@@ -59,3 +60,37 @@ class SurveyResponse(BaseModel):
     updated_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
+
+
+class PublicSurveyResponse(BaseModel):
+    status: str
+
+    satisfaction_score: Optional[int] = None
+    nps_score: Optional[int] = None
+    rebook_intent: Optional[str] = None
+    comment: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+
+class PublicSurveySubmission(BaseModel):
+    satisfaction_score: int = Field(
+        ge=1,
+        le=5,
+    )
+
+    nps_score: int = Field(
+        ge=0,
+        le=10,
+    )
+
+    rebook_intent: Literal[
+        "yes",
+        "no",
+        "unsure",
+    ]
+
+    comment: Optional[str] = Field(
+        default=None,
+        max_length=2000,
+    )

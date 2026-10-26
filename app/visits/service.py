@@ -1,3 +1,5 @@
+
+import secrets
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -9,8 +11,10 @@ from app.models.retention_case import RetentionCase
 from app.models.revenue_recovery import RevenueRecovery
 from app.models.service import Service
 from app.models.staff import Staff
+from app.models.survey import Survey
 from app.models.visit import Visit
 from app.schemas.visit import VisitCreate, VisitUpdate
+from app.surveys.notifications import create_pending_survey_notification
 
 
 def validate_visit_references(
@@ -118,6 +122,23 @@ def create_visit(
     try:
         db.add(visit)
         db.flush()
+
+        survey = Survey(
+            business_id=business_id,
+            visit_id=visit.id,
+            client_id=client.id,
+            status="pending",
+            public_token=secrets.token_urlsafe(32),
+        )
+
+        db.add(survey)
+        db.flush()
+
+        create_pending_survey_notification(
+            survey=survey,
+            client=client,
+            db=db,
+        )
 
         recalculate_client_metrics(client, db)
 
@@ -288,6 +309,25 @@ def delete_visit(visit: Visit, db: Session):
                 detail="Customer associated with visit was not found.",
             )
 
+        survey = (
+            db.query(Survey)
+            .filter(
+                Survey.visit_id == visit.id,
+                Survey.business_id == visit.business_id,
+            )
+            .with_for_update()
+            .first()
+        )
+
+        if survey and survey.status == "completed":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "This visit cannot be deleted because "
+                    "its survey has already been completed."
+                ),
+            )
+
         recovery = (
             db.query(RevenueRecovery)
             .filter(
@@ -298,6 +338,10 @@ def delete_visit(visit: Visit, db: Session):
 
         if recovery:
             db.delete(recovery)
+            db.flush()
+
+        if survey:
+            db.delete(survey)
             db.flush()
 
         db.delete(visit)

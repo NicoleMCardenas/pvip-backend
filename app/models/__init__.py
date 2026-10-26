@@ -1,3 +1,4 @@
+
 from app.models.business import Business
 from app.models.user import User
 from app.models.client import Client
@@ -8,3 +9,4 @@ from app.models.survey import Survey
 from app.models.retention_case import RetentionCase
 from app.models.retention_activity import RetentionActivity
 from app.models.revenue_recovery import RevenueRecovery
+from app.models.survey_notification import SurveyNotification

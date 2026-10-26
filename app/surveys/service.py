@@ -1,3 +1,4 @@
+
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -7,10 +8,18 @@ from sqlalchemy.orm import Session
 from app.models.client import Client
 from app.models.survey import Survey
 from app.models.visit import Visit
-from app.schemas.survey import SurveyCreate, SurveyResponseUpdate
+from app.schemas.survey import (
+    PublicSurveySubmission,
+    SurveyCreate,
+    SurveyResponseUpdate,
+)
 
 
-def create_survey(data: SurveyCreate, business_id: UUID, db: Session):
+def create_survey(
+    data: SurveyCreate,
+    business_id: UUID,
+    db: Session,
+):
     visit = (
         db.query(Visit)
         .filter(
@@ -22,7 +31,7 @@ def create_survey(data: SurveyCreate, business_id: UUID, db: Session):
 
     if not visit:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=422,
             detail="Visit does not belong to this business.",
         )
 
@@ -37,13 +46,13 @@ def create_survey(data: SurveyCreate, business_id: UUID, db: Session):
 
     if not client:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=422,
             detail="Customer does not belong to this business.",
         )
 
     if visit.client_id != client.id:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=422,
             detail="Visit does not belong to the selected customer.",
         )
 
@@ -58,7 +67,7 @@ def create_survey(data: SurveyCreate, business_id: UUID, db: Session):
 
     if existing_survey:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
+            status_code=409,
             detail="A survey already exists for this visit.",
         )
 
@@ -73,12 +82,16 @@ def create_survey(data: SurveyCreate, business_id: UUID, db: Session):
         db.commit()
         db.refresh(survey)
         return survey
+
     except Exception:
         db.rollback()
         raise
 
 
-def get_surveys(business_id: UUID, db: Session):
+def get_surveys(
+    business_id: UUID,
+    db: Session,
+):
     return (
         db.query(Survey)
         .filter(Survey.business_id == business_id)
@@ -87,7 +100,11 @@ def get_surveys(business_id: UUID, db: Session):
     )
 
 
-def get_survey_by_id(survey_id: UUID, business_id: UUID, db: Session):
+def get_survey_by_id(
+    survey_id: UUID,
+    business_id: UUID,
+    db: Session,
+):
     return (
         db.query(Survey)
         .filter(
@@ -98,12 +115,42 @@ def get_survey_by_id(survey_id: UUID, business_id: UUID, db: Session):
     )
 
 
+def apply_negative_feedback_risk(
+    survey: Survey,
+    db: Session,
+):
+    is_negative_feedback = (
+        (
+            survey.satisfaction_score is not None
+            and survey.satisfaction_score <= 2
+        )
+        or (
+            survey.nps_score is not None
+            and survey.nps_score <= 6
+        )
+    )
+
+    if not is_negative_feedback:
+        return
+
+    client = (
+        db.query(Client)
+        .filter(
+            Client.id == survey.client_id,
+            Client.business_id == survey.business_id,
+        )
+        .first()
+    )
+
+    if client and client.status != "archived":
+        client.status = "at_risk"
+
+
 def update_survey_response(
     survey: Survey,
     data: SurveyResponseUpdate,
     db: Session,
 ):
-    # Determine whether this is the first completion.
     was_completed = survey.status == "completed"
 
     update_data = data.model_dump(
@@ -131,7 +178,7 @@ def update_survey_response(
 
     if not has_response:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=422,
             detail="At least one survey response is required.",
         )
 
@@ -140,34 +187,82 @@ def update_survey_response(
     if survey.completed_at is None:
         survey.completed_at = datetime.now(timezone.utc)
 
-    is_negative_feedback = (
-        (
-            survey.satisfaction_score is not None
-            and survey.satisfaction_score <= 2
-        )
-        or (
-            survey.nps_score is not None
-            and survey.nps_score <= 6
-        )
-    )
-
     try:
-        # Only the initial completion may trigger automatic risk.
-        if not was_completed and is_negative_feedback:
-            client = (
-                db.query(Client)
-                .filter(
-                    Client.id == survey.client_id,
-                    Client.business_id == survey.business_id,
-                )
-                .first()
-            )
-
-            if client and client.status != "archived":
-                client.status = "at_risk"
+        if not was_completed:
+            apply_negative_feedback_risk(survey, db)
 
         db.commit()
         db.refresh(survey)
+        return survey
+
+    except Exception:
+        db.rollback()
+        raise
+
+
+def get_public_survey(
+    token: str,
+    db: Session,
+):
+    survey = (
+        db.query(Survey)
+        .filter(Survey.public_token == token)
+        .first()
+    )
+
+    if not survey:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Survey not found.",
+        )
+
+    return survey
+
+
+def submit_public_survey_response(
+    token: str,
+    data: PublicSurveySubmission,
+    db: Session,
+):
+    try:
+        survey = (
+            db.query(Survey)
+            .filter(Survey.public_token == token)
+            .with_for_update()
+            .first()
+        )
+
+        if not survey:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Survey not found.",
+            )
+
+        if survey.status == "completed":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This survey has already been completed.",
+            )
+
+        if survey.status not in {"pending", "sent"}:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This survey is not available.",
+            )
+
+        survey.satisfaction_score = data.satisfaction_score
+        survey.nps_score = data.nps_score
+        survey.rebook_intent = data.rebook_intent
+        survey.comment = data.comment
+
+        survey.status = "completed"
+        survey.completed_at = datetime.now(timezone.utc)
+
+        apply_negative_feedback_risk(survey, db)
+
+        db.commit()
+        db.refresh(survey)
+
         return survey
 
     except Exception:
