@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import get_current_user, require_roles
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.business import BusinessResponse, BusinessUpdate
@@ -33,7 +33,7 @@ def get_my_business(
 @router.patch("/me", response_model=BusinessResponse)
 def update_my_business(
     data: BusinessUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db)
 ):
     business = get_business_by_id(current_user.business_id, db)

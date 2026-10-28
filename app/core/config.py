@@ -1,4 +1,3 @@
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,6 +15,12 @@ class Settings(BaseSettings):
     email_from: str | None = None
     survey_public_base_url: str | None = None
     email_sending_enabled: bool = False
+
+    # Password recovery
+    password_reset_token_expire_minutes: int = 30
+    password_reset_request_cooldown_seconds: int = 60
+    password_reset_public_base_url: str | None = None
+    password_reset_email_enabled: bool = False
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -10,3 +10,5 @@ from app.models.retention_case import RetentionCase
 from app.models.retention_activity import RetentionActivity
 from app.models.revenue_recovery import RevenueRecovery
 from app.models.survey_notification import SurveyNotification
+from app.models.password_reset_token import PasswordResetToken
+from app.models.password_reset_attempt import PasswordResetAttempt

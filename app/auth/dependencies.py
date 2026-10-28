@@ -48,4 +48,31 @@ def get_current_user(
             detail="Usuario no encontrado."
         )
 
+    token_version = payload.get("token_version")
+
+    if (
+        type(token_version) is not int
+        or token_version != user.token_version
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="La sesión ya no es válida. Inicia sesión nuevamente."
+        )
+
     return user
+
+
+
+def require_roles(*allowed_roles: str):
+    def check_role(
+        current_user: User = Depends(get_current_user),
+    ) -> User:
+        if current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tienes permisos para realizar esta acción.",
+            )
+
+        return current_user
+
+    return check_role

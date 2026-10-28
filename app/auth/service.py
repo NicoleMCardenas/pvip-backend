@@ -4,12 +4,10 @@ from fastapi import HTTPException, status
 from app.models.business import Business
 from app.models.user import User
 
-from app.auth.schemas import RegisterRequest
-from app.core.security import hash_password
-
-from app.auth.schemas import LoginRequest
-from app.core.security import verify_password
+from app.auth.schemas import RegisterRequest, LoginRequest
+from app.core.security import hash_password, verify_password
 from app.core.jwt import create_access_token
+
 
 def register_user(data: RegisterRequest, db: Session):
 
@@ -57,6 +55,7 @@ def register_user(data: RegisterRequest, db: Session):
 
     return user
 
+
 def login_user(data: LoginRequest, db: Session):
 
     user = db.query(User).filter(
@@ -84,7 +83,8 @@ def login_user(data: LoginRequest, db: Session):
         data={
             "sub": str(user.id),
             "email": user.email,
-            "role": user.role
+            "role": user.role,
+            "token_version": user.token_version
         }
     )
 
