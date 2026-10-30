@@ -1,6 +1,13 @@
+
 import uuid
 
-from sqlalchemy import Column, String, DateTime, ForeignKey
+from sqlalchemy import (
+    Column,
+    String,
+    DateTime,
+    ForeignKey,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
@@ -9,6 +16,14 @@ from app.db.session import Base
 
 class Staff(Base):
     __tablename__ = "staff"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "id",
+            "business_id",
+            name="uq_staff_id_business_id",
+        ),
+    )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 

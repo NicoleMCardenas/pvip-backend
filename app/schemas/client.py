@@ -43,3 +43,11 @@ class ClientResponse(ClientBase):
 
     class Config:
         from_attributes = True
+
+class ClientStaffResponse(ClientBase):
+    id: UUID
+    status: str
+    last_visit: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True

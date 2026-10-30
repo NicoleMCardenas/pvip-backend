@@ -94,3 +94,11 @@ class StaffResponse(StaffBase):
     updated_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+class StaffOperationalResponse(BaseModel):
+    id: UUID
+    name: str
+    role: str
+    status: str
+
+    model_config = ConfigDict(from_attributes=True)

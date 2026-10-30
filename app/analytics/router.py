@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import require_roles
 from app.db.session import get_db
 from app.models.user import User
 
@@ -22,7 +22,7 @@ router = APIRouter(
 
 @router.get("/dashboard")
 def dashboard_metrics(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db),
 ):
     return get_dashboard_metrics(
@@ -33,7 +33,7 @@ def dashboard_metrics(
 
 @router.get("/risk-clients")
 def risk_clients(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db),
 ):
     return get_risk_clients(
@@ -44,7 +44,7 @@ def risk_clients(
 
 @router.get("/recovery-queue")
 def recovery_queue(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db),
 ):
     return get_recovery_queue(
@@ -55,7 +55,7 @@ def recovery_queue(
 
 @router.get("/customer-segments")
 def customer_segments(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db),
 ):
     return get_customer_segments(
@@ -66,7 +66,7 @@ def customer_segments(
 
 @router.get("/experience-trends")
 def experience_trends(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db),
 ):
     return get_experience_trends(

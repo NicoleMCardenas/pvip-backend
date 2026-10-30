@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import require_roles
 from app.db.session import get_db
 from app.models.user import User
 
@@ -34,7 +34,7 @@ router = APIRouter(
 
 @router.get("/", response_model=list[RetentionCaseResponse])
 def list_my_retention_cases(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db),
 ):
     return get_retention_cases(current_user.business_id, db)
@@ -47,7 +47,7 @@ def list_my_retention_cases(
 )
 def create_my_retention_case(
     data: RetentionCaseCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db),
 ):
     return create_retention_case(
@@ -63,7 +63,7 @@ def create_my_retention_case(
 )
 def get_my_retention_case(
     case_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db),
 ):
     retention_case = get_retention_case_by_id(
@@ -88,7 +88,7 @@ def get_my_retention_case(
 def update_my_retention_case(
     case_id: UUID,
     data: RetentionCaseUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db),
 ):
     retention_case = get_retention_case_by_id(
@@ -112,7 +112,7 @@ def update_my_retention_case(
 )
 def list_my_retention_activities(
     case_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db),
 ):
     retention_case = get_retention_case_by_id(
@@ -138,7 +138,7 @@ def list_my_retention_activities(
 def create_my_retention_activity(
     case_id: UUID,
     data: RetentionActivityCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db),
 ):
     retention_case = get_retention_case_by_id(

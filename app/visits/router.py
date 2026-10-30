@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import get_current_user, require_roles
 from app.db.session import get_db
 from app.models.user import User
 
@@ -71,7 +71,7 @@ def get_my_visit(
 def update_my_visit(
     visit_id: UUID,
     data: VisitUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db)
 ):
     visit = get_visit_by_id(
@@ -92,7 +92,7 @@ def update_my_visit(
 @router.delete("/{visit_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_my_visit(
     visit_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db)
 ):
     visit = get_visit_by_id(

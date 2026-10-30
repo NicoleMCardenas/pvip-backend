@@ -1,3 +1,4 @@
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
@@ -48,6 +49,13 @@ def get_current_user(
             detail="Usuario no encontrado."
         )
 
+    # Block access for deactivated accounts.
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Esta cuenta está desactivada."
+        )
+
     token_version = payload.get("token_version")
 
     if (
@@ -60,7 +68,6 @@ def get_current_user(
         )
 
     return user
-
 
 
 def require_roles(*allowed_roles: str):

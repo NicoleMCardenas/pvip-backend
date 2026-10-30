@@ -1,3 +1,4 @@
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,6 +22,10 @@ class Settings(BaseSettings):
     password_reset_request_cooldown_seconds: int = 60
     password_reset_public_base_url: str | None = None
     password_reset_email_enabled: bool = False
+
+    # Staff invitations
+    staff_invitation_token_expire_hours: int = 48
+    staff_invitation_public_base_url: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",

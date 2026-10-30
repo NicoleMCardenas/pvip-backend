@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import require_roles
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.survey import (
@@ -37,7 +37,7 @@ router = APIRouter(
 )
 def create_my_survey(
     data: SurveyCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db),
 ):
     return create_survey(
@@ -52,7 +52,7 @@ def create_my_survey(
     response_model=List[SurveyResponse],
 )
 def list_my_surveys(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db),
 ):
     return get_surveys(
@@ -98,7 +98,7 @@ def submit_survey_publicly(
 )
 def get_my_survey(
     survey_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db),
 ):
     survey = get_survey_by_id(
@@ -123,7 +123,7 @@ def get_my_survey(
 def submit_survey_response(
     survey_id: UUID,
     data: SurveyResponseUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db),
 ):
     survey = get_survey_by_id(

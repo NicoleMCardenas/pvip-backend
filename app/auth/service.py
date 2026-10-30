@@ -78,7 +78,11 @@ def login_user(data: LoginRequest, db: Session):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales inválidas."
         )
-
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Esta cuenta está desactivada."
+        )
     access_token = create_access_token(
         data={
             "sub": str(user.id),

@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import get_current_user, require_roles
 from app.db.session import get_db
 from app.models.user import User
 
@@ -32,7 +32,7 @@ router = APIRouter(
 @router.post("/", response_model=ServiceResponse)
 def create_my_service(
     data: ServiceCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db)
 ):
     return create_service(data, current_user.business_id, db)
@@ -67,7 +67,7 @@ def get_my_service(
 def update_my_service(
     service_id: UUID,
     data: ServiceUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db)
 ):
     service = get_service_by_id(service_id, current_user.business_id, db)
@@ -84,7 +84,7 @@ def update_my_service(
 @router.delete("/{service_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_my_service(
     service_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db)
 ):
     service = get_service_by_id(service_id, current_user.business_id, db)

@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import require_roles
 from app.db.session import get_db
 from app.models.user import User
 
@@ -35,7 +35,7 @@ router = APIRouter(
     response_model=RevenueRecoveryMetricsResponse,
 )
 def get_my_revenue_recovery_metrics(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db),
 ):
     return get_revenue_recovery_metrics(
@@ -49,7 +49,7 @@ def get_my_revenue_recovery_metrics(
     response_model=list[RevenueRecoveryResponse],
 )
 def list_my_revenue_recoveries(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db),
 ):
     return get_revenue_recoveries(
@@ -65,7 +65,7 @@ def list_my_revenue_recoveries(
 )
 def create_my_revenue_recovery(
     data: RevenueRecoveryCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db),
 ):
     return attribute_recovered_revenue(
@@ -82,7 +82,7 @@ def create_my_revenue_recovery(
 )
 def delete_my_revenue_recovery(
     recovery_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("owner")),
     db: Session = Depends(get_db),
 ):
     remove_revenue_attribution(

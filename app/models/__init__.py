@@ -12,3 +12,4 @@ from app.models.revenue_recovery import RevenueRecovery
 from app.models.survey_notification import SurveyNotification
 from app.models.password_reset_token import PasswordResetToken
 from app.models.password_reset_attempt import PasswordResetAttempt
+from app.models.staff_invitation import StaffInvitation
