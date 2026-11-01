@@ -199,15 +199,54 @@ Tests are maintained in files following the `test_*.py` naming convention.
 
 The project uses Pytest, alongside other test scripts. Execution requirements may vary depending on the test and its database or service dependencies.
 
+
+## Public Demo and Deployment
+
+KAIRO includes a publicly accessible demonstration environment:
+
+https://kairo-ten-tau.vercel.app/login
+
+Visitors can select **Explorar demo** to access the application without registering or providing credentials.
+
+The backend provides:
+
+```http
+POST /auth/demo
+```
+
+This endpoint issues an authenticated access token for the predefined fictional demo business.
+
+The demonstration environment contains fictional customer, visit, survey, retention, and revenue recovery records.
+
+### Demo Data Protection
+
+The backend enforces read-only access for the demo business.
+
+Authenticated requests using POST, PUT, PATCH, or DELETE are rejected with HTTP 403 when they attempt to modify demo business data.
+
+Public survey submissions and staff invitation acceptance are also restricted for the demo business.
+
+Regular business accounts retain their existing permissions and functionality.
+
+### Production Infrastructure
+
+The public demonstration uses:
+
+- **Render:** FastAPI backend hosting.
+- **Supabase:** Managed PostgreSQL database.
+- **Vercel:** Next.js frontend hosting.
+
+The local Docker Compose environment remains available for development and testing.
+
 ## Development Status
 
-KAIRO is currently in its quality assurance and professional preparation stage.
+KAIRO's core backend modules are implemented, tested across multiple workflows, and deployed as part of a public portfolio demonstration.
 
-The backend's core business modules and staff invitation functionality have been implemented, with automated tests covering multiple workflows.
+The frontend and backend have successfully completed their latest deployment and build checks.
 
-The complete real-email staff invitation activation flow remains pending verification because external email delivery is restricted by the current Resend sender configuration.
+Staff invitation workflows have been implemented and technically tested. The complete real-email invitation activation flow remains pending external verification because email delivery depends on the configured provider and verified sender permissions.
 
-Production deployment and infrastructure configuration are separate from the existing local Docker development environment.
+The public demo uses fictional data and is intended for professional evaluation and product exploration.
 
 ## Project Purpose
 
