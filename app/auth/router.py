@@ -1,6 +1,6 @@
 
 import logging
-
+from app.auth.demo_access import create_demo_access_token
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
@@ -54,6 +54,9 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
 def login(data: LoginRequest, db: Session = Depends(get_db)):
     return login_user(data, db)
 
+@router.post("/demo", response_model=TokenResponse)
+def login_demo(db: Session = Depends(get_db)):
+    return create_demo_access_token(db)
 
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)):

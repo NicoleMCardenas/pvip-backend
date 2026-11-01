@@ -1,10 +1,11 @@
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.demo_read_only import enforce_demo_read_only
 from app.db.session import get_db
 from app.models.user import User
 
@@ -13,6 +14,7 @@ security = HTTPBearer()
 
 
 def get_current_user(
+    request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
 ):
@@ -66,6 +68,13 @@ def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="La sesión ya no es válida. Inicia sesión nuevamente."
         )
+
+    # Prevent authenticated demo users from modifying data.
+    # Regular business accounts retain their existing permissions.
+    enforce_demo_read_only(
+        method=request.method,
+        user=user,
+    )
 
     return user
 

@@ -1,7 +1,7 @@
 
 from datetime import datetime, timezone
 from uuid import UUID
-
+from app.core.demo_read_only import DEMO_BUSINESS_ID
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -237,7 +237,14 @@ def submit_public_survey_response(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Survey not found.",
             )
-
+        if survey.business_id == DEMO_BUSINESS_ID:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    "KAIRO Demo es de solo lectura. "
+                    "Las encuestas de demostración no pueden modificarse."
+                ),
+            )
         if survey.status == "completed":
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,

@@ -1,7 +1,7 @@
 
 import hashlib
 import secrets
-
+from app.core.demo_read_only import DEMO_BUSINESS_ID
 from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException, status
@@ -147,6 +147,10 @@ def accept_staff_invitation(
     )
 
     if invitation is None:
+        db.rollback()
+        return False
+
+    if invitation.business_id == DEMO_BUSINESS_ID:
         db.rollback()
         return False
 
